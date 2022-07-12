@@ -1,4 +1,6 @@
-DROP TABLE IF EXISTS ${tbl}$_imp_first_campaign; --you take the first impression because the message that they received tells you what the customer was in the beginning 
+
+--pull row numbers and take the first row for each customer (first order, first impression, etc.)
+DROP TABLE IF EXISTS ${tbl}$_imp_first_campaign; 
 CREATE  TABLE ${tbl}$_imp_first_campaign WITH (appendonly=TRUE, compresstype=quicklz) AS
 SELECT
     mk_cust_id,
