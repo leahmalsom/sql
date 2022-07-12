@@ -1,0 +1,33 @@
+--Average time between orders, stopping at a user's last order
+
+select avg(time_between_orders) as avg_time_between_orders from
+(select a.mk_cust_id, b.order_date - a.order_date as time_between_orders 
+from
+    (
+        SELECT
+            mk_cust_id,
+            order_date,
+            order_sk,
+            ROW_NUMBER() OVER (PARTITION BY mk_cust_id ORDER BY order_date, order_sk) AS order_seq
+        FROM
+            anly_work_tbls.lmm_test_orders 
+                    where order_date < '2020-12-01'
+        and order_total_usd > 0
+        group by 1,2,3
+       )a
+left join
+    (
+        SELECT
+            mk_cust_id,
+            order_date,
+            order_sk,
+            ROW_NUMBER() OVER (PARTITION BY mk_cust_id ORDER BY order_date, order_sk) AS order_seq
+        FROM
+            anly_work_tbls.lmm_test_orders 
+                    where order_date < '2020-12-01'
+        and order_total_usd > 0
+        group by 1,2,3
+       )b
+on a.mk_cust_id = b.mk_cust_id
+where b.order_seq = a.order_seq + 1
+group by 1,2)c;
