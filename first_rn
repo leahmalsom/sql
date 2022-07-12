@@ -1,0 +1,24 @@
+DROP TABLE IF EXISTS ${tbl}$_imp_first_campaign; --you take the first impression because the message that they received tells you what the customer was in the beginning 
+CREATE  TABLE ${tbl}$_imp_first_campaign WITH (appendonly=TRUE, compresstype=quicklz) AS
+SELECT
+    mk_cust_id,
+    dmm_date AS first_dmm_date,
+    io_id    AS first_io_id,
+    message_campaign_id as first_message_campaign_id,
+    first_rn
+FROM
+    (
+        SELECT
+            mk_cust_id,
+            dmm_date,
+            io_id,
+            message_campaign_id,
+            ROW_NUMBER() OVER (PARTITION BY mk_cust_id ORDER BY dmm_date, dmm_time ) AS first_rn
+        FROM
+            ${tbl}$_fact_impressions_temp
+        where mk_cust_id is not null
+       ) a
+WHERE
+    first_rn=1
+DISTRIBUTED BY (mk_cust_id);
+ANALYZE  ${tbl}$_imp_first_campaign;    
